@@ -1,102 +1,107 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header elevated>
-      <q-toolbar>
-        <q-btn
-          flat
-          dense
-          round
-          icon="menu"
-          aria-label="Menu"
-          @click="toggleLeftDrawer"
-        />
-
-        <q-toolbar-title>
-          Quasar App
+    <q-header bordered :class="settings.highContrast ? 'bg-dark text-white' : 'bg-white text-black'">
+      <q-toolbar class="q-py-sm">
+        <q-toolbar-title class="text-weight-bolder row items-center no-wrap">
+          <q-icon name="sports_esports" size="32px" color="primary" class="q-mr-sm" />
+          <span>{{ pageTitle }}</span>
         </q-toolbar-title>
 
-        <div>Quasar v{{ $q.version }}</div>
+        <q-btn flat round dense icon="help_outline" to="/ajuda" class="q-mr-sm" />
+        <q-btn flat round dense icon="settings" to="/configuracoes" />
       </q-toolbar>
     </q-header>
 
-    <q-drawer
-      v-model="leftDrawerOpen"
-      show-if-above
-      bordered
-    >
-      <q-list>
-        <q-item-label
-          header
-        >
-          Essential Links
-        </q-item-label>
-
-        <EssentialLink
-          v-for="link in linksList"
-          :key="link.title"
-          v-bind="link"
-        />
-      </q-list>
-    </q-drawer>
-
     <q-page-container>
-      <router-view />
+      <router-view v-touch-swipe.horizontal="handleSwipe" />
     </q-page-container>
+
+    <q-footer bordered :class="settings.highContrast ? 'bg-dark' : 'bg-white'">
+      <q-tabs
+        v-model="activeTab"
+        dense
+        class="text-grey"
+        active-color="primary"
+        indicator-color="primary"
+        align="justify"
+        narrow-indicator
+      >
+        <q-route-tab
+          name="partida"
+          icon="play_arrow"
+          label="Partida"
+          to="/"
+          exact
+        />
+        <q-route-tab
+          name="historico"
+          icon="history"
+          label="Histórico"
+          to="/historico"
+          exact
+        />
+      </q-tabs>
+    </q-footer>
   </q-layout>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import EssentialLink, { type EssentialLinkProps } from 'components/EssentialLink.vue';
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useQuasar } from 'quasar'
+import { useSettingsStore } from 'src/stores/useSettingsStore'
 
-const linksList: EssentialLinkProps[] = [
-  {
-    title: 'Docs',
-    caption: 'quasar.dev',
-    icon: 'school',
-    link: 'https://quasar.dev'
-  },
-  {
-    title: 'Github',
-    caption: 'github.com/quasarframework',
-    icon: 'code',
-    link: 'https://github.com/quasarframework'
-  },
-  {
-    title: 'Discord Chat Channel',
-    caption: 'chat.quasar.dev',
-    icon: 'chat',
-    link: 'https://chat.quasar.dev'
-  },
-  {
-    title: 'Forum',
-    caption: 'forum.quasar.dev',
-    icon: 'record_voice_over',
-    link: 'https://forum.quasar.dev'
-  },
-  {
-    title: 'Twitter',
-    caption: '@quasarframework',
-    icon: 'rss_feed',
-    link: 'https://twitter.quasar.dev'
-  },
-  {
-    title: 'Facebook',
-    caption: '@QuasarFramework',
-    icon: 'public',
-    link: 'https://facebook.quasar.dev'
-  },
-  {
-    title: 'Quasar Awesome',
-    caption: 'Community Quasar projects',
-    icon: 'favorite',
-    link: 'https://awesome.quasar.dev'
+const $q = useQuasar()
+const route = useRoute()
+const router = useRouter()
+const { settings } = useSettingsStore()
+
+const activeTab = ref('partida')
+
+const pageTitle = computed(() => {
+  switch (route.name) {
+    case 'partida': return 'PokéVidas'
+    case 'historico': return 'Histórico'
+    case 'configuracoes': return 'Configurações'
+    case 'ajuda': return 'Ajuda'
+    default: return 'PokéVidas'
   }
-];
+})
 
-const leftDrawerOpen = ref(false);
+onMounted(() => {
+  $q.dark.set(settings.highContrast)
+})
 
-function toggleLeftDrawer () {
-  leftDrawerOpen.value = !leftDrawerOpen.value;
+function handleSwipe({ direction }: { direction: string }) {
+  if (direction === 'left' && route.name === 'partida') {
+    router.push('/historico')
+  } else if (direction === 'right' && route.name === 'historico') {
+    router.push('/')
+  }
 }
 </script>
+
+<style lang="scss">
+.q-footer {
+  .q-tab__label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
+// Global styles for custom feeling
+body {
+  font-family: 'Inter', '-apple-system', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  background-color: #f5f5f7;
+}
+
+.body--dark {
+  background-color: #121212;
+}
+
+.rounded-borders {
+  border-radius: 12px;
+}
+</style>
